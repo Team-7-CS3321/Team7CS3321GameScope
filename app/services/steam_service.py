@@ -14,9 +14,33 @@ def get_player_summary(steam_id: str):
         "steamids": steam_id,
     }
 
-    response = requests.get(url, params=params, timeout=10)
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
 
-    return {
-        "status_code": response.status_code,
-        "data": response.json(),
-    }
+        players = data.get("response", {}).get("players", [])
+        if not players:
+            return {
+                "status_code": response.status_code,
+                "player": None,
+                "error": "No player found",
+            }
+
+        player = players[0]
+
+        simplified_player = {
+            "steamid": player.get("steamid"),
+            "personaname": player.get("personaname"),
+            "profileurl": player.get("profileurl"),
+            "avatarfull": player.get("avatarfull"),
+            "realname": player.get("realname"),
+            "loccountrycode": player.get("loccountrycode"),
+        }
+
+        return {
+            "status_code": response.status_code,
+            "player": simplified_player,
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
