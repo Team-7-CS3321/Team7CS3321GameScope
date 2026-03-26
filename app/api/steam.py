@@ -11,6 +11,7 @@ def steam_player_summary(steam_id: str):
 
     if result["status_code"] != 200:
         return error_response(
+            code = "Steam_Web_API_Error",
             message = result.get("error", "Unknown Steam Error"),
             status_code = result["status_code"]
         )
