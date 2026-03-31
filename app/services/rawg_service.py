@@ -1,4 +1,5 @@
 import requests
+import re
 from app.core.config import RAWG_API_KEY
 
 RAWG_BASE_URL = "https://api.rawg.io/api"
@@ -85,4 +86,146 @@ def search_games(query: str):
         "status_code": 200,
         "count": data.get("count", 0),
         "results": simplified_results,
+    }
+
+def get_game_store_links(rawg_game_id: int):
+    if not RAWG_API_KEY:
+        return {
+            "status_code": 500,
+            "error": "RAWG_API_KEY is missing from .env",
+        }
+
+    if rawg_game_id is None:
+        return {
+            "status_code": 400,
+            "error": "RAWG game ID is required",
+        }
+
+    url = f"{RAWG_BASE_URL}/games/{rawg_game_id}/stores"
+    params = {
+        "key": RAWG_API_KEY,
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+    except requests.exceptions.Timeout:
+        return {
+            "status_code": 504,
+            "error": "Request to RAWG timed out",
+        }
+    except requests.exceptions.ConnectionError:
+        return {
+            "status_code": 503,
+            "error": "Could not connect to RAWG",
+        }
+    except requests.exceptions.HTTPError:
+        return {
+            "status_code": response.status_code,
+            "error": "RAWG returned an HTTP error",
+            "details": response.text,
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "status_code": 500,
+            "error": "Unexpected RAWG request error",
+            "details": str(e),
+        }
+
+    try:
+        data = response.json()
+    except ValueError:
+        return {
+            "status_code": 502,
+            "error": "RAWG returned invalid JSON",
+        }
+
+    simplified_results = []
+    for store_entry in data.get("results", []):
+        store = store_entry.get("store", {})
+        simplified_results.append(
+            {
+                "store_id": store.get("id"),
+                "store_name": store.get("name"),
+                "store_slug": store.get("slug"),
+                "store_domain": store.get("domain"),
+                "url": store_entry.get("url"),
+            }
+        )
+
+    return {
+        "status_code": 200,
+        "results": simplified_results,
+    }
+
+
+def extract_steam_app_id_from_url(url: str):
+    if not url:
+        return None
+
+    match = re.search(r"/app/(\d+)", url)
+    if match:
+        return match.group(1)
+
+    match = re.search(r"[?&]appid=(\d+)", url)
+    if match:
+        return match.group(1)
+
+    return None
+
+
+def get_steam_app_id_from_game_name(game_name: str):
+    if not game_name or not game_name.strip():
+        return {
+            "status_code": 400,
+            "error": "Game name is required",
+        }
+
+    search_result = search_games(game_name)
+    if search_result.get("status_code") != 200:
+        return search_result
+
+    games = search_result.get("results", [])
+    if not games:
+        return {
+            "status_code": 404,
+            "error": "No RAWG game found for the given name",
+        }
+
+    for game in games:
+        rawg_game_id = game.get("id")
+        if rawg_game_id is None:
+            continue
+
+        stores_result = get_game_store_links(rawg_game_id)
+        if stores_result.get("status_code") != 200:
+            continue
+
+        for store_entry in stores_result.get("results", []):
+            store_name = (store_entry.get("store_name") or "").lower()
+            store_domain = (store_entry.get("store_domain") or "").lower()
+            store_url = store_entry.get("url")
+
+            is_steam = (
+                "steam" in store_name
+                or "steampowered.com" in store_domain
+                or ("steam" in (store_url or "").lower())
+            )
+
+            if not is_steam:
+                continue
+
+            app_id = extract_steam_app_id_from_url(store_url)
+            if app_id:
+                return {
+                    "status_code": 200,
+                    "app_id": app_id,
+                    "game_name": game.get("name"),
+                    "rawg_id": rawg_game_id,
+                    "steam_url": store_url,
+                }
+
+    return {
+        "status_code": 404,
+        "error": "No Steam app ID found for the given game name",
     }
