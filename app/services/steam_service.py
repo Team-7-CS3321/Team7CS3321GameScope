@@ -1,89 +1,15 @@
 import requests
 from app.core.config import STEAM_API_KEY
-from app.services.rawg_service import get_steam_app_id_from_game_name
 
 STEAM_BASE_URL = "https://api.steampowered.com"
 
-
-def get_player_summary(steam_id: str):
-    if not STEAM_API_KEY:
-        return {
-            "status_code": 500,
-            "error": "STEAM_API_KEY is missing from .env",
-        }
-
-    if not steam_id or not steam_id.strip():
-        return {
-            "status_code": 400,
-            "error": "Steam ID is required",
-        }
-
-    cleaned_steam_id = steam_id.strip()
-
-    url = f"{STEAM_BASE_URL}/ISteamUser/GetPlayerSummaries/v2/"
-    params = {
-        "key": STEAM_API_KEY,
-        "steamids": cleaned_steam_id,
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-    except requests.exceptions.Timeout:
-        return {
-            "status_code": 504,
-            "error": "Request to Steam timed out",
-        }
-    except requests.exceptions.ConnectionError:
-        return {
-            "status_code": 503,
-            "error": "Could not connect to Steam",
-        }
-    except requests.exceptions.HTTPError:
-        return {
-            "status_code": response.status_code,
-            "error": "Steam returned an HTTP error",
-            "details": response.text,
-        }
-    except requests.exceptions.RequestException as e:
-        return {
-            "status_code": 500,
-            "error": "Unexpected Steam request error",
-            "details": str(e),
-        }
-
-    try:
-        data = response.json()
-    except ValueError:
-        return {
-            "status_code": 502,
-            "error": "Steam returned invalid JSON",
-        }
-
-    players = data.get("response", {}).get("players", [])
-    if not players:
-        return {
-            "status_code": 404,
-            "error": "No player found for the given Steam ID",
-            "player": None,
-        }
-
-    player = players[0]
-
-    simplified_player = {
-        "steamid": player.get("steamid"),
-        "personaname": player.get("personaname"),
-        "profileurl": player.get("profileurl"),
-        "avatarfull": player.get("avatarfull"),
-        "realname": player.get("realname"),
-        "loccountrycode": player.get("loccountrycode"),
-    }
-
-    return {
-        "status_code": 200,
-        "player": simplified_player,
-    }
-
+# Aquires and returns a list of a games achievements based on its app_id
+# Includes achievement's:
+# 1. name
+# 2. display_name
+# 3. description
+# 4. hidden flag
+# 4. icon url
 def get_game_achievements(app_id: str):
     if not STEAM_API_KEY:
         return {
@@ -166,7 +92,10 @@ def get_game_achievements(app_id: str):
         "achievements": simplified_achievements,
     }
 
-
+# Aquires and returns a list of global achievement percentages based on app_id
+# Includes achievement's:
+# 1. name
+# 2. percentage
 def get_global_achievement_percentages(app_id: str):
     if not app_id or not str(app_id).strip():
         return {
@@ -236,7 +165,15 @@ def get_global_achievement_percentages(app_id: str):
         "achievement_percentages": simplified_percentages,
     }
 
-
+# Combines the output of get_global_achievement_percentages and get_game_achievements
+# Ensures that the correct percentages are mapped to the correct achievements
+# Includes achievement's:
+# 1. name
+# 2. display_name
+# 3. description
+# 4. hidden flag
+# 5. icon url
+# 6. global_percentage
 def get_achievements_with_rarity(app_id: str):
     achievements_result = get_game_achievements(app_id)
     if achievements_result.get("status_code") != 200:
@@ -273,20 +210,3 @@ def get_achievements_with_rarity(app_id: str):
         "game_version": achievements_result.get("game_version"),
         "achievements": combined_achievements,
     }
-
-def get_achievements_with_rarity_by_name(game_name: str):
-    app_id_result = get_steam_app_id_from_game_name(game_name)
-    if app_id_result.get("status_code") != 200:
-        return app_id_result
-
-    app_id = app_id_result.get("app_id")
-    achievements_result = get_achievements_with_rarity(app_id)
-
-    if achievements_result.get("status_code") != 200:
-        return achievements_result
-
-    achievements_result["resolved_app_id"] = app_id
-    achievements_result["resolved_game_name"] = app_id_result.get("game_name")
-    achievements_result["steam_url"] = app_id_result.get("steam_url")
-
-    return achievements_result
