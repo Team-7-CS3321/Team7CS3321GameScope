@@ -1,11 +1,10 @@
 from fastapi import FastAPI
-from app.api import steam, rawg, combined
+from app.api import steam, combined
 from app.core.config import STEAM_API_KEY, RAWG_API_KEY
 
 app = FastAPI(title="Team 7 GameScope API")
 
 app.include_router(steam.router)
-app.include_router(rawg.router)
 app.include_router(combined.router)
 
 
