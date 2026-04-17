@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
-from app.services.rawg_service import search_for_steam_game_by_name
-from app.utils.response import success_response, error_response
+from team7cs3321gamescope.services.rawg_service import search_for_steam_game_by_name
+from team7cs3321gamescope.utils.response import success_response, error_response
 
 router = APIRouter(prefix="/rawg", tags=["RAWG"])
 

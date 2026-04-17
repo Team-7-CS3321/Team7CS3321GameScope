@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock, call
 import requests
-from app.services.rawg_service import (
+from team7cs3321gamescope.services.rawg_service import (
     search_for_steam_game_by_name,
     find_steam_info_from_rawg_id,
     get_game_store_links,
@@ -30,7 +30,7 @@ def test_extract_steam_app_id_empty_url():
 # --- get_game_store_links ---
 
 def test_get_game_store_links_missing_api_key():
-    with patch("app.services.rawg_service.RAWG_API_KEY", ""):
+    with patch("team7cs3321gamescope.services.rawg_service.RAWG_API_KEY", ""):
         result = get_game_store_links(12345)
         assert result["status_code"] == 500
 
@@ -96,7 +96,7 @@ def test_find_steam_info_success():
             }
         ]
     }
-    with patch("app.services.rawg_service.get_game_store_links", return_value=mock_stores):
+    with patch("team7cs3321gamescope.services.rawg_service.get_game_store_links", return_value=mock_stores):
         result = find_steam_info_from_rawg_id(12345)
         assert result is not None
         assert result["app_id"] == "1245620"
@@ -112,18 +112,18 @@ def test_find_steam_info_no_steam_store():
             }
         ]
     }
-    with patch("app.services.rawg_service.get_game_store_links", return_value=mock_stores):
+    with patch("team7cs3321gamescope.services.rawg_service.get_game_store_links", return_value=mock_stores):
         result = find_steam_info_from_rawg_id(12345)
         assert result is None
 
 def test_find_steam_info_store_links_fail():
     mock_fail = {"status_code": 500, "error": "Error"}
-    with patch("app.services.rawg_service.get_game_store_links", return_value=mock_fail):
+    with patch("team7cs3321gamescope.services.rawg_service.get_game_store_links", return_value=mock_fail):
         result = find_steam_info_from_rawg_id(12345)
         assert result is None
 
 def test_search_missing_api_key():
-    with patch("app.services.rawg_service.RAWG_API_KEY", ""):
+    with patch("team7cs3321gamescope.services.rawg_service.RAWG_API_KEY", ""):
         result = search_for_steam_game_by_name("Elden Ring")
         assert result["status_code"] == 500
 
@@ -164,7 +164,7 @@ def test_search_no_steam_game_found():
         "results": [{"id": 999}]
     }
     with patch("requests.get", return_value=mock_search_response):
-        with patch("app.services.rawg_service.find_steam_info_from_rawg_id", return_value=None):
+        with patch("team7cs3321gamescope.services.rawg_service.find_steam_info_from_rawg_id", return_value=None):
             result = search_for_steam_game_by_name("somegame")
             assert result["status_code"] == 404
 
@@ -193,7 +193,7 @@ def test_search_success():
     }
 
     with patch("requests.get", side_effect=[mock_search_response, mock_details_response]):
-        with patch("app.services.rawg_service.find_steam_info_from_rawg_id", return_value=mock_steam_info):
+        with patch("team7cs3321gamescope.services.rawg_service.find_steam_info_from_rawg_id", return_value=mock_steam_info):
             result = search_for_steam_game_by_name("Elden Ring")
             assert result["status_code"] == 200
             assert result["game"]["name"] == "Elden Ring"
@@ -212,6 +212,6 @@ def test_search_details_fetch_fails():
     }
 
     with patch("requests.get", side_effect=[mock_search_response, requests.exceptions.RequestException]):
-        with patch("app.services.rawg_service.find_steam_info_from_rawg_id", return_value=mock_steam_info):
+        with patch("team7cs3321gamescope.services.rawg_service.find_steam_info_from_rawg_id", return_value=mock_steam_info):
             result = search_for_steam_game_by_name("Elden Ring")
             assert result["status_code"] == 500

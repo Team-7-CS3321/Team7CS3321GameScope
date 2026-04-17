@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from fastapi.testclient import TestClient
-from app.main import app
+from team7cs3321gamescope.main import app
 
 client = TestClient(app)
 
@@ -24,7 +24,7 @@ def test_full_report_success():
             ]
         }
     }
-    with patch("app.api.combined.get_full_report", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.combined.get_full_report", return_value=mock_result):
         response = client.get("/report/?game_name=Elden Ring")
         assert response.status_code == 200
         data = response.json()
@@ -36,7 +36,7 @@ def test_full_report_game_not_found():
         "status_code": 404,
         "error": "No Steam game found for this query"
     }
-    with patch("app.api.combined.get_full_report", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.combined.get_full_report", return_value=mock_result):
         response = client.get("/report/?game_name=fakegame999")
         assert response.status_code == 404
 
@@ -45,7 +45,7 @@ def test_full_report_no_steam_id():
         "status_code": 404,
         "error": "Steam app ID not found for this game"
     }
-    with patch("app.api.combined.get_full_report", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.combined.get_full_report", return_value=mock_result):
         response = client.get("/report/?game_name=somegame")
         assert response.status_code == 404
 
@@ -58,7 +58,7 @@ def test_full_report_steam_error():
         "status_code": 503,
         "error": "Could not connect to Steam"
     }
-    with patch("app.api.combined.get_full_report", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.combined.get_full_report", return_value=mock_result):
         response = client.get("/report/?game_name=Elden Ring")
         assert response.status_code == 503
 
@@ -72,7 +72,7 @@ def test_full_report_no_achievements():
             "achievements": []
         }
     }
-    with patch("app.api.combined.get_full_report", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.combined.get_full_report", return_value=mock_result):
         response = client.get("/report/?game_name=Some Game")
         assert response.status_code == 200
         assert response.json()["data"]["game"]["difficulty_score"] == 0

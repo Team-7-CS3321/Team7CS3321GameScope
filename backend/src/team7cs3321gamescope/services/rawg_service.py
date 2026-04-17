@@ -1,6 +1,6 @@
 import requests
 import re
-from app.core.config import RAWG_API_KEY
+from team7cs3321gamescope.core.config import RAWG_API_KEY
 
 RAWG_BASE_URL = "https://api.rawg.io/api"
 

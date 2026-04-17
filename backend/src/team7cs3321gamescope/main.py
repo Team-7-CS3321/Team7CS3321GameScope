@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.api import steam, rawg, combined
-from app.core.config import STEAM_API_KEY, RAWG_API_KEY
+from team7cs3321gamescope.api import steam, rawg, combined
+from team7cs3321gamescope.core.config import STEAM_API_KEY, RAWG_API_KEY
 
 app = FastAPI(title="Team 7 GameScope API")
 

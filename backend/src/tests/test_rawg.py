@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from fastapi.testclient import TestClient
-from app.main import app
+from team7cs3321gamescope.main import app
 
 client = TestClient(app)
 
@@ -19,7 +19,7 @@ def test_rawg_search_success():
             "description": "An action RPG."
         }
     }
-    with patch("app.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
         response = client.get("/rawg/search?query=Elden Ring")
         assert response.status_code == 200
         assert response.json()["data"]["game"]["name"] == "Elden Ring"
@@ -29,7 +29,7 @@ def test_rawg_search_no_steam_game_found():
         "status_code": 404,
         "error": "No Steam game found for this query"
     }
-    with patch("app.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
         response = client.get("/rawg/search?query=somefakegame999")
         assert response.status_code == 404
 
@@ -42,7 +42,7 @@ def test_rawg_search_missing_api_key():
         "status_code": 400,
         "error": "Query parameter is required"
     }
-    with patch("app.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
         response = client.get("/rawg/search?query=Elden Ring")
         assert response.status_code == 400
 
@@ -51,7 +51,7 @@ def test_rawg_search_timeout():
         "status_code": 504,
         "error": "Request to RAWG timed out"
     }
-    with patch("app.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
         response = client.get("/rawg/search?query=Elden Ring")
         assert response.status_code == 504
 
@@ -60,6 +60,6 @@ def test_rawg_search_invalid_json():
         "status_code": 502,
         "error": "RAWG returned invalid JSON"
     }
-    with patch("app.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.rawg.search_for_steam_game_by_name", return_value=mock_result):
         response = client.get("/rawg/search?query=Elden Ring")
         assert response.status_code == 502
