@@ -1,5 +1,5 @@
-from app.services.rawg_service import search_for_steam_game_by_name
-from app.services.steam_service import get_achievements_with_rarity
+from team7cs3321gamescope.services.rawg_service import search_for_steam_game_by_name
+from team7cs3321gamescope.services.steam_service import get_achievements_with_rarity
 
 
 def get_full_report(game_name: str):

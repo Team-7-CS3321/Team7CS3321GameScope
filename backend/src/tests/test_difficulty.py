@@ -1,4 +1,4 @@
-from app.services.combined_service import calculate_difficulty_score
+from team7cs3321gamescope.services.combined_service import calculate_difficulty_score
 
 def test_empty_achievements_returns_zero():
     assert calculate_difficulty_score([]) == 0

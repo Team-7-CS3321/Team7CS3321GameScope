@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
-from app.services.combined_service import get_full_report
-from app.utils.response import success_response, error_response
+from team7cs3321gamescope.services.combined_service import get_full_report
+from team7cs3321gamescope.utils.response import success_response, error_response
 
 router = APIRouter(prefix="/report", tags=["Report"])
 

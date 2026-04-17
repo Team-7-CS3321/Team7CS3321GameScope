@@ -1,5 +1,5 @@
 import requests
-from app.core.config import STEAM_API_KEY
+from team7cs3321gamescope.core.config import STEAM_API_KEY
 
 STEAM_BASE_URL = "https://api.steampowered.com"
 

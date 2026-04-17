@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 import requests
-from app.services.steam_service import (
+from team7cs3321gamescope.services.steam_service import (
     get_game_achievements,
     get_global_achievement_percentages,
     get_achievements_with_rarity,
@@ -9,7 +9,7 @@ from app.services.steam_service import (
 # --- get_game_achievements ---
 
 def test_get_game_achievements_missing_api_key():
-    with patch("app.services.steam_service.STEAM_API_KEY", ""):
+    with patch("team7cs3321gamescope.services.steam_service.STEAM_API_KEY", ""):
         result = get_game_achievements("1245620")
         assert result["status_code"] == 500
 
@@ -172,15 +172,15 @@ def test_get_achievements_with_rarity_success():
             {"name": "ACH1", "percent": 21.5}
         ]
     }
-    with patch("app.services.steam_service.get_game_achievements", return_value=mock_achievements):
-        with patch("app.services.steam_service.get_global_achievement_percentages", return_value=mock_percentages):
+    with patch("team7cs3321gamescope.services.steam_service.get_game_achievements", return_value=mock_achievements):
+        with patch("team7cs3321gamescope.services.steam_service.get_global_achievement_percentages", return_value=mock_percentages):
             result = get_achievements_with_rarity("1245620")
             assert result["status_code"] == 200
             assert result["achievements"][0]["global_percentage"] == 21.5
 
 def test_get_achievements_with_rarity_achievements_fail():
     mock_fail = {"status_code": 504, "error": "Timeout"}
-    with patch("app.services.steam_service.get_game_achievements", return_value=mock_fail):
+    with patch("team7cs3321gamescope.services.steam_service.get_game_achievements", return_value=mock_fail):
         result = get_achievements_with_rarity("1245620")
         assert result["status_code"] == 504
 
@@ -192,8 +192,8 @@ def test_get_achievements_with_rarity_percentages_fail():
         "achievements": []
     }
     mock_fail = {"status_code": 503, "error": "Connection error"}
-    with patch("app.services.steam_service.get_game_achievements", return_value=mock_achievements):
-        with patch("app.services.steam_service.get_global_achievement_percentages", return_value=mock_fail):
+    with patch("team7cs3321gamescope.services.steam_service.get_game_achievements", return_value=mock_achievements):
+        with patch("team7cs3321gamescope.services.steam_service.get_global_achievement_percentages", return_value=mock_fail):
             result = get_achievements_with_rarity("1245620")
             assert result["status_code"] == 503
 
@@ -210,8 +210,8 @@ def test_get_achievements_with_rarity_percentage_not_matched():
         "status_code": 200,
         "achievement_percentages": []
     }
-    with patch("app.services.steam_service.get_game_achievements", return_value=mock_achievements):
-        with patch("app.services.steam_service.get_global_achievement_percentages", return_value=mock_percentages):
+    with patch("team7cs3321gamescope.services.steam_service.get_game_achievements", return_value=mock_achievements):
+        with patch("team7cs3321gamescope.services.steam_service.get_global_achievement_percentages", return_value=mock_percentages):
             result = get_achievements_with_rarity("1245620")
             assert result["status_code"] == 200
             assert result["achievements"][0]["global_percentage"] is None
