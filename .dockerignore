@@ -10,3 +10,5 @@ __pycache__
 .ruff_cache
 README.md
 backend/src/tests
+frontend
+docker-compose.yml
