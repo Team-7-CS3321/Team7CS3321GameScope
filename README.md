@@ -17,6 +17,8 @@ GameScope is a backend-focused project that combines data from the Steam Web API
 - uv
 - Steam Web API
 - RAWG API
+- React
+- Vite
 
 ## Running the Project
 
