@@ -41,6 +41,7 @@ def get_full_report(game_name: str):
 
             "steam_app_id": app_id,
             "steam_url": game_data.get("steam_url"),
+            "cover_art": game_data.get("cover_art"),
 
             "achievement_count": len(achievements),
             "difficulty_score": difficulty_score,

@@ -119,6 +119,7 @@ def search_for_steam_game_by_name(query: str):
             "tags": [t["name"] for t in details.get("tags", [])],
             "steam_app_id": steam_app_id,
             "steam_url": steam_url,
+            "cover_art": details.get("background_image"),
         }, 
     }
 
