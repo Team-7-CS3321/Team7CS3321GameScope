@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from team7cs3321gamescope.main import app
