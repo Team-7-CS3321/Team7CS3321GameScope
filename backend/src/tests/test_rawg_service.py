@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 import requests
 from team7cs3321gamescope.services.rawg_service import (
     search_for_steam_game_by_name,
