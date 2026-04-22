@@ -9,11 +9,11 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY backend/pyproject.toml backend/uv.lock ./
+COPY pyproject.toml uv.lock ./
 
 RUN uv sync --frozen --no-dev
 
-COPY backend/src/team7cs3321gamescope ./src/team7cs3321gamescope
+COPY src/team7cs3321gamescope ./src/team7cs3321gamescope
 
 ENV PYTHONPATH=/app/src
 
