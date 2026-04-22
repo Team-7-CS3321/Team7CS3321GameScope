@@ -137,7 +137,9 @@ jobs:
           doppler secrets get EC2_SSH_KEY --plain > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           EC2_HOST=$(doppler secrets get EC2_HOST --plain)
+          EC2_USER=$(doppler secrets get EC2_USER --plain)
           echo "EC2_HOST=$EC2_HOST" >> "$GITHUB_ENV"
+          echo "EC2_USER=$EC2_USER" >> "$GITHUB_ENV"
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
@@ -148,7 +150,7 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
-          ssh -i ~/.ssh/deploy_key admin@"$EC2_HOST" bash <<EOF
+          ssh -i ~/.ssh/deploy_key "$EC2_USER"@"$EC2_HOST" bash <<EOF
           set -euo pipefail
           echo '${GHCR_TOKEN}' | docker login ghcr.io -u '${GHCR_USER}' --password-stdin
           docker pull '${IMAGE}:${SHA}'
