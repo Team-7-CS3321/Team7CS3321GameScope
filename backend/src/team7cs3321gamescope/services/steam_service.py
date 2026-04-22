@@ -14,7 +14,7 @@ def get_game_achievements(app_id: str):
     if not STEAM_API_KEY:
         return {
             "status_code": 500,
-            "error": "STEAM_API_KEY is missing from .env",
+            "error": "STEAM_API_KEY is missing from environment",
         }
 
     if not app_id or not str(app_id).strip():

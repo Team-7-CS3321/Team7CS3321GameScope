@@ -9,7 +9,7 @@ def search_for_steam_game_by_name(query: str):
     if not RAWG_API_KEY:
         return {
             "status_code": 500,
-            "error": "RAWG_API_KEY is missing from .env",
+            "error": "RAWG_API_KEY is missing from environment",
         }
 
     if not query or not query.strip():
