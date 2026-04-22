@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} ./backend
 
       - name: Smoke test container
         run: |
@@ -116,7 +116,7 @@ jobs:
         run: |
           docker build \
             -t ${{ steps.meta.outputs.image }}:latest \
-            -t ${{ steps.meta.outputs.image }}:${{ github.sha }} .
+            -t ${{ steps.meta.outputs.image }}:${{ github.sha }} ./backend
           docker push ${{ steps.meta.outputs.image }}:latest
           docker push ${{ steps.meta.outputs.image }}:${{ github.sha }}
 
