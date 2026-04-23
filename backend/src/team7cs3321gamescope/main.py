@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import steam, rawg, combined
+from app.api import steam, combined
 from app.core.config import STEAM_API_KEY, RAWG_API_KEY
 from fastapi.middleware.cors import CORSMiddleware
 from team7cs3321gamescope.api import steam, combined
