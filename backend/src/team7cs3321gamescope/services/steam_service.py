@@ -1,5 +1,5 @@
 import requests
-from app.core.config import STEAM_API_KEY
+from team7cs3321gamescope.core.config import STEAM_API_KEY
 
 STEAM_BASE_URL = "https://api.steampowered.com"
 
@@ -14,7 +14,7 @@ def get_game_achievements(app_id: str):
     if not STEAM_API_KEY:
         return {
             "status_code": 500,
-            "error": "STEAM_API_KEY is missing from .env",
+            "error": "STEAM_API_KEY is missing from environment",
         }
 
     if not app_id or not str(app_id).strip():

@@ -23,18 +23,20 @@ GameScope is a backend-focused project that combines data from the Steam Web API
 ## Running the Project
 
 1. Clone the repository
-2. Create a `.env` file using `.env.example`
+2. Use "cd" to move to "~/Team73321GameScope/backend
 3. Install dependencies:
    ```bash
    uv sync --all-groups
 4. Run the local server:
     ```bash
+
    uv run uvicorn app.main:app --reload
 5. In a new Terminal
    cd Team7CS3321GameScope/frontend
    npm run dev
+   doppler run -- uv run uvicorn team7cs3321gamescope.main:app --reload --app-dir src
 
-5. While server is running:
+6. While server is running:
    Swagger docs available at: http://127.0.0.1:8000/docs
    Website at
    http://localhost:5173

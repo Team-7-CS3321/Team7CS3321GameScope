@@ -1,5 +1,5 @@
-from app.services.rawg_service import search_for_steam_game_by_name
-from app.services.steam_service import get_achievements_with_rarity
+from team7cs3321gamescope.services.rawg_service import search_for_steam_game_by_name
+from team7cs3321gamescope.services.steam_service import get_achievements_with_rarity
 
 
 def get_full_report(game_name: str):
@@ -41,6 +41,7 @@ def get_full_report(game_name: str):
 
             "steam_app_id": app_id,
             "steam_url": game_data.get("steam_url"),
+            "cover_art": game_data.get("cover_art"),
 
             "achievement_count": len(achievements),
             "difficulty_score": difficulty_score,

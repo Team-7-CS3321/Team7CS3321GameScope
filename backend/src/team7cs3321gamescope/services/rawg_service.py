@@ -1,6 +1,6 @@
 import requests
 import re
-from app.core.config import RAWG_API_KEY
+from team7cs3321gamescope.core.config import RAWG_API_KEY
 
 RAWG_BASE_URL = "https://api.rawg.io/api"
 
@@ -9,7 +9,7 @@ def search_for_steam_game_by_name(query: str):
     if not RAWG_API_KEY:
         return {
             "status_code": 500,
-            "error": "RAWG_API_KEY is missing from .env",
+            "error": "RAWG_API_KEY is missing from environment",
         }
 
     if not query or not query.strip():
@@ -119,6 +119,7 @@ def search_for_steam_game_by_name(query: str):
             "tags": [t["name"] for t in details.get("tags", [])],
             "steam_app_id": steam_app_id,
             "steam_url": steam_url,
+            "cover_art": details.get("background_image"),
         }, 
     }
 

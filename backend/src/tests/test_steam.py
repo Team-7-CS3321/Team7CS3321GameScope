@@ -1,7 +1,6 @@
-import pytest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
-from app.main import app
+from team7cs3321gamescope.main import app
 
 client = TestClient(app)
 
@@ -16,7 +15,7 @@ def test_achievements_success():
             {"name": "ACH1", "display_name": "First Kill", "global_percentage": 80.0}
         ]
     }
-    with patch("app.api.steam.get_achievements_with_rarity", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.steam.get_achievements_with_rarity", return_value=mock_result):
         response = client.get("/steam/achievements?app_id=1245620")
         assert response.status_code == 200
         data = response.json()
@@ -32,7 +31,7 @@ def test_achievements_timeout():
         "status_code": 504,
         "error": "Request to Steam timed out"
     }
-    with patch("app.api.steam.get_achievements_with_rarity", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.steam.get_achievements_with_rarity", return_value=mock_result):
         response = client.get("/steam/achievements?app_id=1245620")
         assert response.status_code == 504
 
@@ -41,7 +40,7 @@ def test_achievements_connection_error():
         "status_code": 503,
         "error": "Could not connect to Steam"
     }
-    with patch("app.api.steam.get_achievements_with_rarity", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.steam.get_achievements_with_rarity", return_value=mock_result):
         response = client.get("/steam/achievements?app_id=1245620")
         assert response.status_code == 503
 
@@ -50,6 +49,6 @@ def test_achievements_missing_api_key():
         "status_code": 500,
         "error": "STEAM_API_KEY is missing from .env"
     }
-    with patch("app.api.steam.get_achievements_with_rarity", return_value=mock_result):
+    with patch("team7cs3321gamescope.api.steam.get_achievements_with_rarity", return_value=mock_result):
         response = client.get("/steam/achievements?app_id=1245620")
         assert response.status_code == 500

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
-from app.services.steam_service import get_achievements_with_rarity
-from app.utils.response import success_response, error_response
+from team7cs3321gamescope.services.steam_service import get_achievements_with_rarity
+from team7cs3321gamescope.utils.response import success_response, error_response
 
 router = APIRouter(prefix="/steam", tags=["Steam"])
 
