@@ -30,16 +30,18 @@ GameScope is a backend-focused project that combines data from the Steam Web API
 4. Run the local server:
     ```bash
 
-   uv run uvicorn app.main:app --reload
+   .venv\Scripts\activatedoppler run -- uv run uvicorn team7cs3321gamescope.main:app --reload --app-dir src
 5. In a new Terminal
-   cd Team7CS3321GameScope/frontend
-   npm run dev
-   doppler run -- uv run uvicorn team7cs3321gamescope.main:app --reload --app-dir src
+     ```bash
 
-6. While server is running:
+     
+   cd Team7CS3321GameScope/frontend
+     
+   npm run dev
+7. While server is running:
    Swagger docs available at: http://127.0.0.1:8000/docs
-   Website at
-   http://localhost:5173
+   
+   Website available at: http://localhost:5173
 
 ## Notes
 1. .env is not committed via .gitignore
