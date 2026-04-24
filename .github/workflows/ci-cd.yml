@@ -1,167 +1,96 @@
-name: GameScope CI/CD
+name: CI/CD
 
 on:
   push:
-    branches: [main, "feature/**"]
-  pull_request:
     branches: [main]
-
-env:
-  IMAGE_NAME: gamescope-backend
-  PYTHON_VERSION: "3.11"
+  workflow_dispatch:
 
 jobs:
-  lint:
+  coverage:
+    name: Coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
-
-      - name: Ruff
-        working-directory: backend
-        run: uvx ruff check .
-
-  test:
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
+        run: uv python install 3.12
 
       - name: Install dependencies
         working-directory: backend
-        run: uv sync --all-groups
+        run: uv sync
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: backend
         env:
           PYTHONPATH: src
-        run: uv run pytest -v
+        run: |
+          mkdir -p coverage
+          uv run coverage run --source=src/team7cs3321gamescope -m pytest
+          uv run coverage lcov -o coverage/lcov.info
+          uv run coverage report
 
-  docker-build:
+      - name: Check coverage threshold
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          path: backend/coverage/lcov.info
+          min_coverage: 80
+          exclude: '**/**/__init__.py tests/**'
+
+  build:
+    name: Build & Push
+    needs: coverage
     runs-on: ubuntu-latest
-    needs: test
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} ./backend
+      - name: Fetch secrets from Doppler
+        uses: dopplerhq/secrets-fetch-action@v1.2.0
+        id: doppler
+        with:
+          doppler-token: ${{ secrets.DOPPLER_SERVICE_TOKEN }}
 
-      - name: Smoke test container
-        run: |
-          docker run -d \
-            --name gamescope-smoke \
-            -p 8000:8000 \
-            -e DOPPLER_TOKEN=${{ secrets.DOPPLER_TOKEN }} \
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-          for i in {1..15}; do
-            if curl -sf http://localhost:8000/docs > /dev/null; then
-              echo "Container healthy on attempt $i"
-              docker stop gamescope-smoke
-              exit 0
-            fi
-            sleep 2
-          done
-
-          echo "Container failed to respond; dumping logs:"
-          docker logs gamescope-smoke
-          docker stop gamescope-smoke
-          exit 1
-
-  push-image:
-    runs-on: ubuntu-latest
-    needs: docker-build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    permissions:
-      contents: read
-      packages: write
-
-    outputs:
-      image: ${{ steps.meta.outputs.image }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Compute lowercase image name
-        id: meta
-        run: |
-          OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
-          echo "image=ghcr.io/${OWNER_LC}/${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ steps.doppler.outputs.DOCKER_USERNAME }}
+          password: ${{ steps.doppler.outputs.DOCKER_PASSWORD }}
 
-      - name: Build and push image
-        run: |
-          docker build \
-            -t ${{ steps.meta.outputs.image }}:latest \
-            -t ${{ steps.meta.outputs.image }}:${{ github.sha }} ./backend
-          docker push ${{ steps.meta.outputs.image }}:latest
-          docker push ${{ steps.meta.outputs.image }}:${{ github.sha }}
+      - name: Build Docker image
+        run: docker build --no-cache -t ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest ./backend
+
+      - name: Push Docker image
+        run: docker push ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
 
   deploy:
+    name: Deploy
+    needs: build
     runs-on: ubuntu-latest
-    needs: push-image
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
     steps:
-      - name: Install Doppler CLI
-        run: curl -sLf https://cli.doppler.com/install.sh | sudo bash
+      - name: Fetch secrets from Doppler
+        uses: dopplerhq/secrets-fetch-action@v1.2.0
+        id: doppler
+        with:
+          doppler-token: ${{ secrets.DOPPLER_SERVICE_TOKEN }}
 
-      - name: Set up SSH and resolve EC2 host
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@master
         env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          mkdir -p ~/.ssh
-          doppler secrets get EC2_SSH_KEY --plain > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          EC2_HOST=$(doppler secrets get EC2_HOST --plain)
-          EC2_USER=$(doppler secrets get EC2_USER --plain)
-          echo "EC2_HOST=$EC2_HOST" >> "$GITHUB_ENV"
-          echo "EC2_USER=$EC2_USER" >> "$GITHUB_ENV"
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
-
-      - name: Deploy to EC2
-        env:
-          IMAGE: ${{ needs.push-image.outputs.image }}
-          SHA: ${{ github.sha }}
-          GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          ssh -i ~/.ssh/deploy_key "$EC2_USER"@"$EC2_HOST" bash <<EOF
-          set -euo pipefail
-          echo '${GHCR_TOKEN}' | docker login ghcr.io -u '${GHCR_USER}' --password-stdin
-          docker pull '${IMAGE}:${SHA}'
-          docker stop gamescope 2>/dev/null || true
-          docker rm gamescope 2>/dev/null || true
-          docker run -d \
-            --name gamescope \
-            --restart unless-stopped \
-            -p 80:8000 \
-            -e DOPPLER_TOKEN='${DOPPLER_TOKEN}' \
-            '${IMAGE}:${SHA}'
-          docker logout ghcr.io
-          docker image prune -f
-          EOF
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_SERVICE_TOKEN }}
+        with:
+          host: ${{ steps.doppler.outputs.EC2_HOST }}
+          username: ${{ steps.doppler.outputs.EC2_USER }}
+          key: ${{ steps.doppler.outputs.EC2_PEM }}
+          envs: DOPPLER_TOKEN
+          script: |
+            sudo docker rm -f gamescope-backend || true
+            sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
+            sudo docker run -d --name gamescope-backend -p 80:8000 \
+              -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
+              ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
