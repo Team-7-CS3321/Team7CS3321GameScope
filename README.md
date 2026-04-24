@@ -29,8 +29,7 @@ GameScope is a backend-focused project that combines data from the Steam Web API
    uv sync --all-groups
 4. Run the local server:
     ```bash
-
-   .venv\Scripts\activatedoppler run -- uv run uvicorn team7cs3321gamescope.main:app --reload --app-dir src
+   doppler run -- uv run uvicorn team7cs3321gamescope.main:app --reload --app-dir src
 5. In a new Terminal
      ```bash
 
