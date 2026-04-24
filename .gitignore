@@ -210,3 +210,6 @@ __marimo__/
 # Frontend
 node_modules/
 dist/
+
+# Frontend coverage report
+frontend/coverage/
