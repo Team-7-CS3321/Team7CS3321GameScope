@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query
 from team7cs3321gamescope.services.combined_service import get_full_report
 from team7cs3321gamescope.utils.response import success_response, error_response
+from team7cs3321gamescope.services.rawg_service import get_recommendations_by_genres
 
 router = APIRouter(prefix="/report", tags=["Report"])
 
@@ -10,6 +11,8 @@ router = APIRouter(prefix="/report", tags=["Report"])
     summary="Get full game report",
     description="Returns a full Steam-focused game report using RAWG metadata and Steam achievement rarity data."
 )
+
+
 def game_report(game_name: str = Query(..., description="Steam game title to search for")):
     result = get_full_report(game_name)
 
@@ -25,3 +28,8 @@ def game_report(game_name: str = Query(..., description="Steam game title to sea
             "game": result.get("game")
         }
     )
+
+
+@router.get("/recommend/")
+def recommend(genres: str):
+    return get_recommendations_by_genres(genres)
