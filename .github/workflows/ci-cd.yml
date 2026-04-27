@@ -24,7 +24,7 @@ jobs:
         run: uvx ruff check .
 
   coverage:
-    name: Coverage
+    name: Backend Coverage
     needs: lint
     runs-on: ubuntu-latest
     steps:
@@ -60,9 +60,36 @@ jobs:
           min_coverage: 80
           exclude: '**/**/__init__.py tests/**'
 
+  frontend-coverage:
+    name: Frontend Coverage
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests with coverage
+        working-directory: frontend
+        run: npm run coverage
+
+      - name: Check frontend coverage threshold
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          path: frontend/coverage/lcov.info
+          min_coverage: 80
+
   build:
     name: Build & Push
-    needs: coverage
+    needs: [coverage, frontend-coverage]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
