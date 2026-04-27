@@ -9,8 +9,10 @@ function App() {
     try {
       console.log("Searching for:", query);
 
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
       const response = await fetch(
-        `http://localhost:8000/report/?game_name=${query}`
+        `${apiUrl}/report/?game_name=${query}`
       );
 
       const data = await response.json();

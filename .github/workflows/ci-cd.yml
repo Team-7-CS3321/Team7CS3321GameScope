@@ -80,11 +80,21 @@ jobs:
           username: ${{ steps.doppler.outputs.DOCKER_USERNAME }}
           password: ${{ steps.doppler.outputs.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
+      - name: Build backend image
         run: docker build --no-cache -t ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest ./backend
 
-      - name: Push Docker image
+      - name: Push backend image
         run: docker push ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
+
+      - name: Build frontend image
+        run: |
+          docker build --no-cache \
+            --build-arg VITE_API_URL=http://${{ steps.doppler.outputs.EC2_HOST }}:8000 \
+            -t ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest \
+            ./frontend
+
+      - name: Push frontend image
+        run: docker push ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest
 
   deploy:
     name: Deploy
@@ -107,8 +117,11 @@ jobs:
           key: ${{ steps.doppler.outputs.EC2_PEM }}
           envs: DOPPLER_TOKEN
           script: |
-            sudo docker rm -f gamescope-backend || true
+            sudo docker rm -f gamescope-backend gamescope-frontend || true
             sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
-            sudo docker run -d --name gamescope-backend -p 80:8000 \
+            sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest
+            sudo docker run -d --name gamescope-backend -p 8000:8000 \
               -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
               ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
+            sudo docker run -d --name gamescope-frontend -p 80:80 \
+              ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest
