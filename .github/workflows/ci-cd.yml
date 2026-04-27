@@ -85,7 +85,7 @@ jobs:
         uses: VeryGoodOpenSource/very_good_coverage@v3
         with:
           path: frontend/coverage/lcov.info
-          min_coverage: 60
+          min_coverage: 80
 
   build:
     name: Build & Push
@@ -144,7 +144,7 @@ jobs:
           key: ${{ steps.doppler.outputs.EC2_PEM }}
           envs: DOPPLER_TOKEN
           script: |
-            sudo docker rm -f gamescope-backend gamescope-frontend || true
+            sudo docker rm -f gamescope gamescope-backend gamescope-frontend || true
             sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
             sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest
             sudo docker run -d --name gamescope-backend -p 8000:8000 \
