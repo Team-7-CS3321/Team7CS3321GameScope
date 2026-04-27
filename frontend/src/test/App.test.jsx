@@ -4,7 +4,11 @@ import App from '../App'
 
 
 beforeEach(() => {
-  global.fetch = vi.fn()
+  // Default mock returns empty results for any unmocked fetch calls
+  // (e.g. the recommendations fetch that follows the main /report/ fetch)
+  global.fetch = vi.fn().mockResolvedValue({
+    json: async () => ({ results: [] }),
+  })
 })
 
 
@@ -97,8 +101,8 @@ describe('getDifficultyLabel', () => {
     })
     render(<App />)
     fireEvent.click(screen.getByText('Search'))
-    await screen.findByText(/Hard/i)
-    expect(screen.getByText(/Hard/i)).toBeInTheDocument()
+    await screen.findByText(/Hard\b/i)
+    expect(screen.getByText(/Hard\b/i)).toBeInTheDocument()
   })
 
   it('shows Very Hard for score > 80', async () => {
