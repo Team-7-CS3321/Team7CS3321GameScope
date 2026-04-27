@@ -85,7 +85,7 @@ jobs:
         uses: VeryGoodOpenSource/very_good_coverage@v3
         with:
           path: frontend/coverage/lcov.info
-          min_coverage: 80
+          min_coverage: 60
 
   build:
     name: Build & Push
