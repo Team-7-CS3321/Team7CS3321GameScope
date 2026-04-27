@@ -116,7 +116,7 @@ jobs:
       - name: Build frontend image
         run: |
           docker build --no-cache \
-            --build-arg VITE_API_URL=http://${{ steps.doppler.outputs.EC2_HOST }}:8000 \
+            --build-arg VITE_API_URL=/api \
             -t ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest \
             ./frontend
 
@@ -145,10 +145,15 @@ jobs:
           envs: DOPPLER_TOKEN
           script: |
             sudo docker rm -f gamescope gamescope-backend gamescope-frontend || true
+            sudo docker network create gamescope-net 2>/dev/null || true
             sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
             sudo docker pull ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest
-            sudo docker run -d --name gamescope-backend -p 8000:8000 \
+            sudo docker run -d --name gamescope-backend \
+              --network gamescope-net \
+              --network-alias backend \
               -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
               ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-backend:latest
-            sudo docker run -d --name gamescope-frontend -p 80:80 \
+            sudo docker run -d --name gamescope-frontend \
+              --network gamescope-net \
+              -p 80:80 \
               ${{ steps.doppler.outputs.DOCKER_USERNAME }}/gamescope-frontend:latest
