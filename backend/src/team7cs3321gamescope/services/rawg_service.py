@@ -232,3 +232,58 @@ def extract_steam_app_id_from_url(url: str):
         return match.group(1)
 
     return None
+
+def get_recommendations_by_genres(genres: str):
+    if not RAWG_API_KEY:
+        return {
+            "status_code": 500,
+            "error": "RAWG_API_KEY is missing from environment",
+        }
+
+    if not genres:
+        return {
+            "status_code": 400,
+            "error": "Genres are required",
+        }
+
+    url = f"{RAWG_BASE_URL}/games"
+    params = {
+        "key": RAWG_API_KEY,
+        "genres": genres,
+        "page_size": 5,
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return {
+            "status_code": 500,
+            "error": "Failed to fetch recommendations",
+            "details": str(e),
+        }
+
+    try:
+        data = response.json()
+    except ValueError:
+        return {
+            "status_code": 502,
+            "error": "Invalid JSON from RAWG",
+        }
+
+    # simplify response for frontend
+    results = [
+        {
+            "name": game.get("name"),
+            "rating": game.get("rating"),
+            "released": game.get("released"),
+            "cover_art": game.get("background_image"),
+        }
+        for game in data.get("results", [])
+    ]
+
+    return {
+        "status_code": 200,
+        "results": results,
+    }
+
